@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <assert.h>
 #include <SDL2/SDL.h>
+#include <pthread.h>
 
 #include "stream_common.h"
 #include "oggstream.h"
@@ -11,8 +12,8 @@ int main(int argc, char *argv[]) {
     int res;
 
     if (argc != 2) {
-	fprintf(stderr, "Usage: %s FILE", argv[0]);
-	exit(EXIT_FAILURE);
+	   fprintf(stderr, "Usage: %s FILE", argv[0]);
+	   exit(EXIT_FAILURE);
     }
     assert(argc == 2);
 
@@ -23,16 +24,25 @@ int main(int argc, char *argv[]) {
     assert(res == 0);
     
     // start the two stream readers
-
+    void * status;
+    pthread_t theora_pid, vorbis_pid;
+    pthread_create(&theora_pid, NULL, theoraStreamReader, (void *)argv[0]);
+    pthread_create(&vorbis_pid, NULL, vorbisStreamReader, (void *)argv[0]);
     
+    // TODO
+
     // wait audio thread
+    pthread_join(vorbis_pid, &status);
 
     // 1 seconde de garde pour le son,
     sleep(1);
 
+    // TODO
     // tuer les deux threads videos si ils sont bloqués
+    pthread_cancel(theora_pid);
 
     // attendre les 2 threads videos
+    pthread_join(theora_pid, &status);
 
     
     exit(EXIT_SUCCESS);    
