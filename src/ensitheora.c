@@ -17,6 +17,7 @@ static SDL_Renderer *renderer = NULL;
 struct TextureDate texturedate[NBTEX] = {}; 
 
 struct streamstate *theorastrstate=NULL;
+pthread_mutex_t mutex_hashmap;
 
 void *draw2SDL(void *arg) {
     int serial = (int) (long long int) arg;
@@ -55,9 +56,9 @@ void *draw2SDL(void *arg) {
     signalerFenetreEtTexturePrete();
 
     /* Protéger l'accès à la hashmap */
-
+    pthread_mutex_lock(& mutex_hashmap);
     HASH_FIND_INT( theorastrstate, &serial, s );
-
+    pthread_mutex_unlock(& mutex_hashmap);
 
 
     assert(s->strtype == TYPE_THEORA);

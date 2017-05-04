@@ -13,6 +13,7 @@ struct TextureDate {
 
 
 extern struct streamstate *theorastrstate;
+extern pthread_mutex_t mutex_hashmap;
 
 void *draw2SDL(void *arg);
 void theora2SDL(struct streamstate *s);
