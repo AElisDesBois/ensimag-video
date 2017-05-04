@@ -10,7 +10,8 @@ extern bool fini;
 
 /* Les extern des variables pour la synchro ici */
 
-
+void semaphores_init();
+void semaphores_destroy();
 /* Fonctions de synchro à implanter */
 
 void envoiTailleFenetre(th_ycbcr_buffer buffer);

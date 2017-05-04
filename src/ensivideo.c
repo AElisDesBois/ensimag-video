@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <SDL2/SDL.h>
 #include <pthread.h>
+#include "synchro.h"
 
 #include "stream_common.h"
 #include "oggstream.h"
@@ -16,6 +17,11 @@ int main(int argc, char *argv[]) {
 	   exit(EXIT_FAILURE);
     }
     assert(argc == 2);
+
+
+    // initialisation des semaphores
+    semaphores_init();
+
 
 
     // Initialisation de la SDL
@@ -46,6 +52,8 @@ int main(int argc, char *argv[]) {
     pthread_join(theora_pid, &status);
     pthread_join(theora2sdlthread, &status);
 
+    // nettoyage des semaphores
+    semaphores_destroy();
     
     exit(EXIT_SUCCESS);    
 }
