@@ -13,7 +13,7 @@ set(CMAKE_BUILD_TYPE Debug)
 #########
 # Vous devez editer les lignes suivantes pour y mettre vos logins
 #########
-set(LOGINS foreyn khennicb)
+set(LOGINS khennicb foreyn)
 
 # Vérification du renseignement des login
 list(SORT LOGINS)
@@ -47,6 +47,17 @@ set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} ${ALLSTRIP_PKG_CFLAGS} -Wall -We
 add_executable(ensivideo src/ensivideo.c src/ensitheora.c src/ensivorbis.c src/oggstream.c src/stream_common.c src/synchro.c)
 
 target_link_libraries(ensivideo pthread ${ALLSTRIP_PKG_LDFLAGS})
+
+##
+# Test utilisant Coccinelle
+##
+add_test(CommonPthreadError perl ${CMAKE_SOURCE_DIR}/tests/pthcocci.pl)
+
+##
+# Ajout d'une cible pour lancer les tests de manière verbeuse
+##
+add_custom_target(check ctest -V)
+
 
 ##
 # Construction de l'archive
