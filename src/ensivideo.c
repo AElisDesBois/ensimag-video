@@ -26,8 +26,8 @@ int main(int argc, char *argv[]) {
     // start the two stream readers
     void * status;
     pthread_t theora_pid, vorbis_pid;
-    pthread_create(&theora_pid, NULL, theoraStreamReader, (void *)argv[0]);
-    pthread_create(&vorbis_pid, NULL, vorbisStreamReader, (void *)argv[0]);
+    pthread_create(&theora_pid, NULL, theoraStreamReader, (void *)argv[1]);
+    pthread_create(&vorbis_pid, NULL, vorbisStreamReader, (void *)argv[1]);
     
     // TODO
 
@@ -40,9 +40,11 @@ int main(int argc, char *argv[]) {
     // TODO
     // tuer les deux threads videos si ils sont bloqués
     pthread_cancel(theora_pid);
+    pthread_cancel(theora2sdlthread);
 
     // attendre les 2 threads videos
     pthread_join(theora_pid, &status);
+    pthread_join(theora2sdlthread, &status);
 
     
     exit(EXIT_SUCCESS);    

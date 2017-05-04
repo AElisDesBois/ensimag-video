@@ -89,18 +89,18 @@ struct streamstate *getStreamState(ogg_sync_state *pstate, ogg_page *ppage,
 int addPageGetPacket(ogg_page *ppage, struct streamstate *s) {
 
     // ajout de la page dans le stream
-    int res = ogg_stream_pagein( & s->strstate, ppage );
-    assert(res == 0);
-    
+	int res = ogg_stream_pagein( & s->strstate, ppage );
+	assert(res == 0);
+
     // retirer un packet du stream
-    int respac = ogg_stream_packetout( & s->strstate, & s->packet );
-    return respac;
+	int respac = ogg_stream_packetout( & s->strstate, & s->packet );
+	return respac;
 }
 
 int getPacket(struct streamstate *s) {
     // retirer un packet du stream
-    int respac = ogg_stream_packetout( & s->strstate, & s->packet );
-    return respac;
+	int respac = ogg_stream_packetout( & s->strstate, & s->packet );
+	return respac;
 }
 
 
@@ -110,63 +110,64 @@ int getPacket(struct streamstate *s) {
    otherwise return 0;
  */
 
-int decodeAllHeaders(int respac, struct streamstate *s, enum streamtype type) {
+   int decodeAllHeaders(int respac, struct streamstate *s, enum streamtype type) {
     // if the packet is complete, decode it
-    if (respac == 1 && (! s->headersRead) &&
-	s->strtype != TYPE_VORBIS) {
+   	if (respac == 1 && (! s->headersRead) &&
+   		s->strtype != TYPE_VORBIS) {
 	// try to detect if the packet contain a theora header
-	int res = th_decode_headerin(& s->th_dec.info,
-				 & s->th_dec.comment,
-				 & s->th_dec.setup,
-				 & s->packet);
+   		int res = th_decode_headerin(& s->th_dec.info,
+   			& s->th_dec.comment,
+   			& s->th_dec.setup,
+   			& s->packet);
 
-	if (res != TH_ENOTFORMAT) {
+   	if (res != TH_ENOTFORMAT) {
 	    // this is a theora
-	    if (res > 0 )  {
+   		if (res > 0 )  {
 		// this a theora header
 		// there are 3 headers
-		s->strtype = TYPE_THEORA;
+   			s->strtype = TYPE_THEORA;
 		// we have finish with the packet
-		return 1;
-	    }
+   			return 1;
+   		}
 
             // premier packet de données theora
 	    // allocation du contexte
-	    s->th_dec.ctx = th_decode_alloc(& s->th_dec.info,
-					    s->th_dec.setup);
-	    assert(s->th_dec.ctx != NULL);
-	    assert(s->strtype == TYPE_THEORA);
-	    s->headersRead = true;
+   		s->th_dec.ctx = th_decode_alloc(& s->th_dec.info,
+   			s->th_dec.setup);
+   		assert(s->th_dec.ctx != NULL);
+   		assert(s->strtype == TYPE_THEORA);
+   		s->headersRead = true;
 
-	    if (type == TYPE_THEORA) {
+   		if (type == TYPE_THEORA) {
 		// lancement du thread gérant l'affichage (draw2SDL)
-	        draw2SDL((void *)&(s->serial));
 
-		assert(res == 0);		     
-	    }
-	}
-    }
-    if (respac == 1 && (! s->headersRead)
-	&& s->strtype != TYPE_THEORA) {
-	int res = vorbis_synthesis_headerin(& s->vo_dec.info,
-					& s->vo_dec.comment,
-					& s->packet);
+		    pthread_create(&theora2sdlthread, NULL, draw2SDL, (void *)&(s->serial));
 
-	if (res ==  OV_ENOTVORBIS && s->strtype == TYPE_VORBIS) {
+   			assert(res == 0);		     
+   		}
+   	}
+   }
+   if (respac == 1 && (! s->headersRead)
+   	&& s->strtype != TYPE_THEORA) {
+   	int res = vorbis_synthesis_headerin(& s->vo_dec.info,
+   		& s->vo_dec.comment,
+   		& s->packet);
+
+   if (res ==  OV_ENOTVORBIS && s->strtype == TYPE_VORBIS) {
 	    // first packet
-	    res = vorbis_synthesis_init(& s->vo_dec.dsp,
-					& s->vo_dec.info);
-	    assert(res == 0);
-	    res = vorbis_block_init(& s->vo_dec.dsp,
-				    & s->vo_dec.block);
-	    assert(res == 0);
-	    s->headersRead = true;
-	} else if (res == 0) {
+   	res = vorbis_synthesis_init(& s->vo_dec.dsp,
+   		& s->vo_dec.info);
+   	assert(res == 0);
+   	res = vorbis_block_init(& s->vo_dec.dsp,
+   		& s->vo_dec.block);
+   	assert(res == 0);
+   	s->headersRead = true;
+   } else if (res == 0) {
 	    // lecture de l'entete vorbis
-	    s->strtype = TYPE_VORBIS;
+   	s->strtype = TYPE_VORBIS;
 	    // ce packet a été complètement traitée
-	    return 1;
-	}
-    }
-    return 0;
+   	return 1;
+   }
+}
+return 0;
 }
