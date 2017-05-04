@@ -8,9 +8,9 @@ bool fini;
 /* les variables pour la synchro, ici */
 
 sem_t *semaphore_taille_fenetre;
-// https://www.theora.org/doc/libtheora-1.0/structth__img__plane.html
-th_ycbcr_buffer TailleFenetre;
 
+// https://www.theora.org/doc/libtheora-1.0/structth__img__plane.html
+struct th_img_plane * TailleFenetre;
 
 
 
@@ -25,7 +25,7 @@ void semaphores_destroy(){
 /* l'implantation des fonctions de synchro ici */
 
 void envoiTailleFenetre(th_ycbcr_buffer buffer) {
-	TailleFenetre =  buffer;
+	TailleFenetre = (struct th_img_plane *) buffer;
 	sem_post(semaphore_taille_fenetre);
 }
 
