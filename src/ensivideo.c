@@ -50,7 +50,6 @@ int main(int argc, char *argv[]) {
 
     // attendre les 2 threads videos
     pthread_join(theora_pid, &status);
-    pthread_join(theora2sdlthread, &status);
 
     // nettoyage des semaphores
     semaphores_destroy();

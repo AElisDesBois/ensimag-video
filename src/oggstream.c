@@ -24,47 +24,51 @@ void *theoraStreamReader(void *arg) {
     struct streamstate *s;
     
     while(! fini) {
-      //printf("theora loop\n");// vérifier si le fichier ne serait pas fini
-	if ( feof( vf ) ) {
-	    fini = true;
-	    return 0;
-	}
+	      //printf("theora loop\n");// vérifier si le fichier ne serait pas fini
+		if ( feof( vf ) ) {
+		    fini = true;
+		    return 0;
+		}
 
-	if (respac == 0) {
-	    pageReader(vf, & oggtheorastate, & theorapage);
-	    s = getStreamState(& oggtheorastate, & theorapage,
-			       TYPE_THEORA);
-	
-	    // ignorer le stream vorbis
-	    if (s->strtype == TYPE_VORBIS)
-		continue;
+		if (respac == 0) {
+		    pageReader(vf, & oggtheorastate, & theorapage);
+		    s = getStreamState(& oggtheorastate, & theorapage,
+				       TYPE_THEORA);
+		
+		    // ignorer le stream vorbis
+		    if (s->strtype == TYPE_VORBIS)
+			continue;
 
-	    respac = addPageGetPacket(& theorapage, s);
-	} else {
-	    respac = getPacket(s);
-	}	    
-	switch( respac ) {
-	case -1:
-	    s->nbpacketoutsync++;
-	    printf("out of sync: gap in data\n");
-	    break;
-	case 0:
-	    // more pages (data) are needed to build a full packet 
-	    continue;
-	    break;
-	case 1:
-	    s->nbpacket++;
-	    break;
-	}
+		    respac = addPageGetPacket(& theorapage, s);
+		} else {
+		    respac = getPacket(s);
+		}	    
+		switch( respac ) {
+		case -1:
+		    s->nbpacketoutsync++;
+		    printf("out of sync: gap in data\n");
+		    break;
+		case 0:
+		    // more pages (data) are needed to build a full packet 
+		    continue;
+		    break;
+		case 1:
+		    s->nbpacket++;
+		    break;
+		}
 
-	if ( decodeAllHeaders(respac, s, TYPE_THEORA) )
-	    continue;
+		if ( decodeAllHeaders(respac, s, TYPE_THEORA) )
+		    continue;
 
-	if (s->strtype == TYPE_THEORA && s->headersRead) {
-	    theora2SDL(s);
-	}
+		if (s->strtype == TYPE_THEORA && s->headersRead) {
+		    theora2SDL(s);
+		}
 
     }
+//    rendez_vous();
+    
+    void * status;
+    pthread_join(theora2sdlthread, &status);
     fclose(vf);
     return 0;
 }

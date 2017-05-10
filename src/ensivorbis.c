@@ -17,16 +17,16 @@ void vorbis2SDL(struct streamstate *s) {
     static long long int nbsamplesbytes = 0;
     assert(s->strtype == TYPE_VORBIS);
     if (! audioid) {
-	want.freq = s->vo_dec.info.rate;
-	want.format = AUDIO_F32;
-	want.channels = s->vo_dec.info.channels;
-	want.samples = 4096;
-	want.callback = NULL;
-	
-	audioid = SDL_OpenAudioDevice(NULL, false, & want, & have, 0 );
-	SDL_PauseAudioDevice(audioid, 0);
-	// start point
-	clock_gettime( CLOCK_REALTIME, & datedebut);
+		want.freq = s->vo_dec.info.rate;
+		want.format = AUDIO_F32;
+		want.channels = s->vo_dec.info.channels;
+		want.samples = 4096;
+		want.callback = NULL;
+		
+		audioid = SDL_OpenAudioDevice(NULL, false, & want, & have, 0 );
+		SDL_PauseAudioDevice(audioid, 0);
+		// start point
+		clock_gettime( CLOCK_REALTIME, & datedebut);
     }
     assert(audioid);
     

@@ -26,4 +26,6 @@ void finConsommerTexture();
 void debutDeposerTexture();
 void finDeposerTexture();
 
+void rendez_vous();
+
 #endif
