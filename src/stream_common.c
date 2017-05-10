@@ -142,7 +142,7 @@ int getPacket(struct streamstate *s) {
    		if (type == TYPE_THEORA) {
 		// lancement du thread gérant l'affichage (draw2SDL)
 
-		    pthread_create(&theora2sdlthread, NULL, draw2SDL, (void *)&(s->serial));
+		    pthread_create(&theora2sdlthread, NULL, draw2SDL, (void *)(long long int)(s->serial));
 
    			assert(res == 0);		     
    		}
