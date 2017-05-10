@@ -35,7 +35,9 @@ void semaphores_destroy(){
 /* l'implantation des fonctions de synchro ici */
 
 void envoiTailleFenetre(th_ycbcr_buffer buffer) {
-	TailleFenetre = (struct th_img_plane *) buffer;
+	windowsx = buffer[0].width;
+	windowsy = buffer[0].height;
+
 	sem_post(semaphore_taille_fenetre);
 }
 
