@@ -11,6 +11,7 @@ int windowsy = 0;
 int tex_iaff= 0;
 int tex_iwri= 0;
 
+int init_okay = 0;
 
 static SDL_Window *screen = NULL;
 static SDL_Renderer *renderer = NULL;
@@ -114,10 +115,12 @@ void theora2SDL(struct streamstate *s) {
 	    
     res =  th_decode_ycbcr_out(s->th_dec.ctx, buffer);
 
-    // Envoyer la taille de la fenêtre
-    envoiTailleFenetre(buffer);
-    
-    attendreFenetreTexture();
+    if(init_okay==0){
+    	init_okay++;
+	    // Envoyer la taille de la fenêtre
+	    envoiTailleFenetre(buffer);	    
+	    attendreFenetreTexture();
+    }
 
     // copy the buffer
     SDL_Rect rect = {};
