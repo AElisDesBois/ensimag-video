@@ -16,6 +16,7 @@ int init_okay = 0;
 static SDL_Window *screen = NULL;
 static SDL_Renderer *renderer = NULL;
 struct TextureDate texturedate[NBTEX] = {}; 
+SDL_Rect rect = {};
 
 struct streamstate *theorastrstate=NULL;
 pthread_mutex_t mutex_hashmap;
@@ -23,6 +24,7 @@ pthread_mutex_t mutex_hashmap;
 void *draw2SDL(void *arg) {
     int serial = (int) (long long int) arg;
     struct streamstate *s= NULL;
+    SDL_Texture* texture = NULL;
 
     attendreTailleFenetre();
     
@@ -44,14 +46,18 @@ void *draw2SDL(void *arg) {
 
 
     // la texture
+    texture = SDL_CreateTexture(renderer,
+					   SDL_PIXELFORMAT_YV12,
+					   SDL_TEXTUREACCESS_STREAMING,
+					   windowsx,
+					   windowsy);
+
+    assert(texture);
+    // remplir les planes de TextureDate
     for(int i=0; i < NBTEX; i++) {
-	texturedate[i].texture = SDL_CreateTexture(renderer,
-						   SDL_PIXELFORMAT_YV12,
-						   SDL_TEXTUREACCESS_STREAMING,
-						   windowsx,
-						   windowsy);
-	texturedate[i].timems = 0.0;
-	assert(texturedate[i].texture);
+		texturedate[i].plane[0] = malloc( windowsx * windowsy );
+		texturedate[i].plane[1] = malloc( windowsx * windowsy );
+		texturedate[i].plane[2] = malloc( windowsx * windowsy );
     }
 
     signalerFenetreEtTexturePrete();
@@ -76,11 +82,19 @@ void *draw2SDL(void *arg) {
 	}
 
 	debutConsommerTexture();
+
+	SDL_UpdateYUVTexture(texture, &rect,
+			       texturedate[tex_iaff].plane[0],
+			       windowsx,
+			       texturedate[tex_iaff].plane[1],
+			       windowsx,
+			       texturedate[tex_iaff].plane[2],
+			       windowsx);
   
 	// Copy the texture with the renderer
 	SDL_SetRenderDrawColor(renderer, 0, 0, 128, 255);
 	SDL_RenderClear(renderer);
-	SDL_RenderCopy(renderer, texturedate[tex_iaff].texture, NULL, NULL);
+	SDL_RenderCopy(renderer, texture, NULL, NULL);
 	SDL_RenderPresent(renderer);
 
 	double timemsfromstart = msFromStart();
@@ -103,41 +117,51 @@ void theora2SDL(struct streamstate *s) {
     
     ogg_int64_t granulpos = -1;
     double framedate; // framedate in seconds
+    th_ycbcr_buffer videobuffer;
+
     int res = th_decode_packetin( s->th_dec.ctx,
 				  & s->packet,
 				  & granulpos);
     framedate = th_granule_time( s->th_dec.ctx, granulpos);
     if (res == TH_DUPFRAME) // 0 byte duplicated frame
-	return;
+		return;
 	
     assert(res == 0);
-    th_ycbcr_buffer buffer;
-	    
-    res =  th_decode_ycbcr_out(s->th_dec.ctx, buffer);
 
-    if(init_okay==0){
-    	init_okay++;
-	    // Envoyer la taille de la fenêtre
-	    envoiTailleFenetre(buffer);	    
-	    attendreFenetreTexture();
-    }
+    // th_ycbcr_buffer buffer = {};
+	static bool once= false;
+	if (! once) {
+		res =  th_decode_ycbcr_out(s->th_dec.ctx, videobuffer);
 
-    // copy the buffer
-    SDL_Rect rect = {};
-    rect.w = buffer[0].width;
-    rect.h = buffer[0].height;
 
+		// Envoyer la taille de la fenêtre
+		envoiTailleFenetre(videobuffer);	    
+		attendreFenetreTexture();
+
+
+		// copy the buffer
+		rect.w = videobuffer[0].width;
+		rect.h = videobuffer[0].height;
+	}
     // 1 seul producteur/un seul conso => synchro sur le nb seulement
 
     debutDeposerTexture();	
 	
-    res = SDL_UpdateYUVTexture(texturedate[tex_iwri].texture, & rect,
-			       buffer[0].data,
-			       buffer[0].stride,
-			       buffer[1].data,
-			       buffer[1].stride,
-			       buffer[2].data,
-			       buffer[2].stride);
+    if (! once){
+    	// for(unsigned int i = 0; i < 3; ++i)
+    	//    texturedate[tex_iwri].buffer[i] = buffer[i];
+    	once = true;
+    } else
+    	res =  th_decode_ycbcr_out(s->th_dec.ctx, videobuffer);
+
+        // copy data in the current texturedate
+    for(int pl = 0; pl < 3; pl++) {
+    	for(int i=0; i < videobuffer[pl].height; i++) {
+    	    memmove( texturedate[tex_iwri].plane[pl]+i*windowsx,
+    		     videobuffer[pl].data+i* videobuffer[pl].stride,
+    		videobuffer[pl].width);
+    	}
+    }
     texturedate[tex_iwri].timems = framedate * 1000;
     assert(res == 0);
     tex_iwri = (tex_iwri + 1) % NBTEX;

@@ -4,10 +4,11 @@
 #include <SDL2/SDL.h>
 #include "ensivideo.h"
 
-#define NBTEX 10
+#define NBTEX 30
 
 struct TextureDate {
-    SDL_Texture *texture;
+    unsigned char *plane[3]; // copy of plane are contiguous, thus
+			     			// stride is width
     double timems; // expiration date of the frame, in ms
 };
 
